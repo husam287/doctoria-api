@@ -1,0 +1,7 @@
+{
+    "env": {
+        "PORT": "8080",
+        "TOKEN_KEY":"sadasdasdasdewd32r4#@$@$$@",
+        "MONGO_URL":"mongodb+srv://doctoria:doctoria123456789@cluster0.rey0l.mongodb.net/doctoria?retryWrites=true&w=majority"
+    }
+}

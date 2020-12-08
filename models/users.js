@@ -28,11 +28,9 @@ const userSchema = new Schema({
     },
     birthday:{
         type:Date,
-        required:true
     },
     address:{
         type:String,
-        required:true
     },
     photo: {
         type: String,
@@ -45,8 +43,7 @@ const userSchema = new Schema({
     },
     userDetails:{
         type:Schema.Types.ObjectId,
-        refPath:userType,
-        required:true
+        refPath:'userType',
     }
 
 });

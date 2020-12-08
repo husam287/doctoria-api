@@ -1,8 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const _DB_URL = 'mongodb+srv://doctoria:doctoria123456789@cluster0.rey0l.mongodb.net/doctoria?retryWrites=true&w=majority'
+const _DB_URL = process.env.MONGO_URL;
 
+
+if(process.env.NODE_ENV != "production") require("dotenv").config();
 //##### main express function #####
 const app = express();
 
@@ -20,11 +22,11 @@ app.use((req, res, next) => {
 
 
 //##### importing Routes #####
-
+const authRouter = require('./routes/auth');
 
 
 //##### using routes #####
-
+app.use("/api/users",authRouter);
 
 
 
@@ -44,7 +46,7 @@ app.use((error, req, res, next) => {
 
 //################# Db connect #################
 mongoose
-.connect(_DB_URL)
+.connect(_DB_URL,{useNewUrlParser:true,useUnifiedTopology:true})
 .then(result => {
     console.log('Connected');
   app.listen(process.env.PORT || 8080);

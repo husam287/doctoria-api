@@ -3,6 +3,10 @@ const Schema = mongoose.Schema;
 
 
 const doctorSchema = new Schema({
+    visable:{
+        type:Boolean,
+        default:true
+    },
     area:{
         type:String,
         required:true
