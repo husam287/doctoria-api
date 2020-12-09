@@ -6,9 +6,9 @@ const patientSchema = new Schema({
     chronicDiseases:[{
         type:String
     }],
-    doctors:[{
-        type:Schema.Types.ObjectId,
-        ref:'User',
+    history:[{
+        doctor:{type:Schema.Types.ObjectId,required:true},
+        date:{type:Date,required:true}
     }]
 });
 

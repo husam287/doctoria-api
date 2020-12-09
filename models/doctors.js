@@ -3,15 +3,16 @@ const Schema = mongoose.Schema;
 
 
 const doctorSchema = new Schema({
-    visable:{
+    // When he finishes his data visible becomes true
+    visible:{
         type:Boolean,
-        default:true
+        default:false
     },
     area:{
         type:String,
         required:true
     },
-    specialization:{
+    speciality:{
         type:String,
         required:true,
     },
@@ -20,8 +21,13 @@ const doctorSchema = new Schema({
         required:true
     },
     patients:[{
-        type:Schema.Types.ObjectId,
-        ref:'User'
+        patient: {type:Schema.Types.ObjectId,required:true},
+        appointmentCompleted:{type:Boolean,default:false},
+        referred:{type:Boolean,default:false}
+    }],
+    appointments:[{
+        patient:{type:Schema.Types.ObjectId,required:true},
+        date:{type:Date,required:true}
     }],
     timeSlot:{
         type:Schema.Types.ObjectId,
