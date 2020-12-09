@@ -3,11 +3,7 @@ const Schema = mongoose.Schema;
 
 
 const doctorSchema = new Schema({
-    // When he finishes his data visible becomes true
-    visible:{
-        type:Boolean,
-        default:false
-    },
+    //No need to vivible as it will be checked by details.area
     area:{
         type:String,
         required:true
@@ -32,7 +28,7 @@ const doctorSchema = new Schema({
     timeSlot:{
         type:Schema.Types.ObjectId,
         ref:'TimeSlot',
-        required:true
+        //not required ass it will added when needed
     },
     reviews:[{
         type:Schema.Types.ObjectId,

@@ -4,7 +4,8 @@ const { validationResult } = require('express-validator/check');
 const jwt = require('jsonwebtoken');
 const uError = require('../utils/uError');
 
-
+//function to be implemented
+// view All doctors,
 
 //########## Sign up ##########
 
