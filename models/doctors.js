@@ -4,6 +4,11 @@ const Schema = mongoose.Schema;
 
 const doctorSchema = new Schema({
     //No need to vivible as it will be checked by details.area
+    basicInfo:{
+        type:Schema.Types.ObjectId,
+        ref:'User',
+        required:true
+    },
     area:{
         type:String,
         required:true
@@ -17,17 +22,16 @@ const doctorSchema = new Schema({
         required:true
     },
     patients:[{
-        patient: {type:Schema.Types.ObjectId,required:true},
-        appointmentCompleted:{type:Boolean,default:false},
-        referred:{type:Boolean,default:false}
+        type:Schema.Types.ObjectId,
+        ref:'Patient',
     }],
     appointments:[{
-        patient:{type:Schema.Types.ObjectId,required:true},
-        date:{type:Date,required:true}
-    }],
-    timeSlot:{
         type:Schema.Types.ObjectId,
-        ref:'TimeSlot',
+        ref:'Appointment'
+    }],
+    timeslot:{
+        type:Schema.Types.ObjectId,
+        ref:'Timeslot',
         //not required ass it will added when needed
     },
     reviews:[{

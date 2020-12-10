@@ -23,11 +23,11 @@ app.use((req, res, next) => {
 
 //##### importing Routes #####
 const authRouter = require('./routes/auth');
-
+const doctorsRouter = require('./routes/doctors');
 
 //##### using routes #####
 app.use("/api/users",authRouter);
-
+app.use("/api/doctors",doctorsRouter);
 
 
 
