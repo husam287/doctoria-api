@@ -1,7 +1,6 @@
-// function to be implemented
-// view his profile , view his patients profiles, transfer patient, edit time slot, edit secondary info,view apponitments,
+const getDateFromDay = require("../utils/getDateFromDay")
 
-exports.test = (req,res,next)=>{
-
-    console.log(new Date(Date.now()));
+exports.test = (req, res, next) => {
+    console.log(getDateFromDay('Sunday'));
+    next();
 }
