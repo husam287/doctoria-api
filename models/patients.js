@@ -11,6 +11,10 @@ const patientSchema = new Schema({
     chronicDiseases:[{
         type:String
     }],
+    appointments:[{
+        details:{type:Schema.Types.ObjectId,ref:'Appointment',required:true},
+        doctor:{type:Schema.Types.ObjectId,ref:'Doctor',required:true}
+    }],
     history:[{
         doctor:{type:Schema.Types.ObjectId,ref:'Doctor',required:true},
         date:{type:Date,required:true}

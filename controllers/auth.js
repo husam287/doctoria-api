@@ -71,6 +71,19 @@ exports.login = (req, res, next) => {
 
 exports.updateBasicInfo = (req,res,next)=>{
 
+    User.findById(req.userId)
+    .select('-email -passoword')
+    .populate('userDetails')
+    .then(user=>{
+        Object.assign(user,req.body);
+        return user.save();
+    })
+    .then(user=>{
+        res.status(200).json(user);
+    })
+    .catch(err=>{
+        next(err);
+    })
 }
 
 
