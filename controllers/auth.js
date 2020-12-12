@@ -11,13 +11,12 @@ const uError = require('../utils/uError');
 
 exports.signup = (req, res, next) => {
     
-    const user = new User(req.body).toObject();
+    const user = new User(req.body);
+    
+    if(user.userType!=='Patient'&&user.userType!=='Doctor') uError(400,'wrong type');
 
-    if(user.password!==user.confirmPassword) uError(400,"password don't match");
-    if(user.userType!=='Patient'||user.userType!=='Doctor') uError('400','wrong type');
-
-    //##### Hash the password #####
-    bcrypt.hash(password, 12)
+    //##### Hash the password ##### 
+    bcrypt.hash(user.password, 12)
         .then((hashed) => {
             user.password=hashed;
             return user.save();
@@ -70,7 +69,7 @@ exports.login = (req, res, next) => {
 }
 
 exports.updateBasicInfo = (req,res,next)=>{
-
+    
     User.findById(req.userId)
     .select('-email -passoword')
     .populate('userDetails')

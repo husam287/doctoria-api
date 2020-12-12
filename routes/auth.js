@@ -3,6 +3,7 @@ const authController = require('../controllers/auth');
 const { vEmail, vPassword, vRepeated, vText, validationResult } = require('../middelwares/validation')
 const {body} = require('express-validator');
 const User = require('../models/users');
+const isAuth = require('../middelwares/isAuth')
 
 //email,password,name to sign up
 router.post('/signup', [
@@ -22,6 +23,7 @@ router.post('/signup', [
 router.post('/login', authController.login)
 
 router.patch('/update-basic-info',[
+    isAuth,
     vText('name',{required:true,max:40}),
     body('phone').isMobilePhone('ar-EG'),
     validationResult
