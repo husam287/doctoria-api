@@ -5,6 +5,8 @@ const {body} = require('express-validator');
 
 
 router.post('/test',doctorsController.test);
+router.get('/allDoctors',doctorsController.viewAllDoctors);
+router.get('/doctor/:doctorId',doctorsController.viewASpecificDoctor);
 
 
 
