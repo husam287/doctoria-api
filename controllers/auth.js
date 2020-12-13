@@ -1,4 +1,5 @@
 const User = require('../models/users');
+const Patient = require('../models/patients');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const uError = require('../utils/uError');
@@ -9,11 +10,17 @@ const uError = require('../utils/uError');
 //########## Sign up ##########
 
 
-exports.signup = (req, res, next) => {
+exports.signup = async (req, res, next) => {
     
     const user = new User(req.body);
-    
+    let patient;
     if(user.userType!=='Patient'&&user.userType!=='Doctor') uError(400,'wrong type');
+
+    if(user.userType === 'Patient') {
+        patient = new Patient({basicInfo:user._id});
+        await patient.save();
+        user.userDetails = patient._id;
+    }
 
     //##### Hash the password ##### 
     bcrypt.hash(user.password, 12)
@@ -75,7 +82,7 @@ exports.updateBasicInfo = (req,res,next)=>{
         address:req.body.address,
         birthday:req.body.birthday
     }
-    
+
     User.findById(req.userId)
     .select('-email -passoword')
     .populate('userDetails')
