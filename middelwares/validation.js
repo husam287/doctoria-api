@@ -50,6 +50,9 @@ exports.vText = (fieldName, options = {}) => {
             const { required, min, max, specialChars } = options;
             // ##### Validatation #####
 
+            // Check if not require and there is no value so dont do all that
+            if(!required && !value) return true;
+
             // Check if the field is empty in case it is required
             if (required && !value) throw new Error(`${fieldName} is required`);
 

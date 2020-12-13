@@ -69,12 +69,18 @@ exports.login = (req, res, next) => {
 }
 
 exports.updateBasicInfo = (req,res,next)=>{
+    const editedUser = {
+        name:req.body.name,
+        phone:req.body.phone,
+        address:req.body.address,
+        birthday:req.body.birthday
+    }
     
     User.findById(req.userId)
     .select('-email -passoword')
     .populate('userDetails')
     .then(user=>{
-        Object.assign(user,req.body);
+        Object.assign(user,editedUser);
         return user.save();
     })
     .then(user=>{
@@ -84,6 +90,8 @@ exports.updateBasicInfo = (req,res,next)=>{
         next(err);
     })
 }
+
+
 
 
 
