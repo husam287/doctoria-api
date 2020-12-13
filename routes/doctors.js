@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const doctorsController = require('../controllers/doctors');
+const isAuth = require('../middelwares/isAuth');
 const { vEmail, vPassword, vRepeated, vText, validationResult } = require('../middelwares/validation')
 const {body} = require('express-validator');
 
@@ -23,7 +24,7 @@ router.put(
 
   router.get('/doctor/profile/',[
       isAuth],doctorsController.ViewProfile);
-  router.get('/doctor/profile/myPatients',doctorsController.ViewMyPatients);
+  router.get('/doctor/profile/myPatients',[isAuth],doctorsController.ViewMyPatients);
 
 
 

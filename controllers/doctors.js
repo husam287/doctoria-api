@@ -66,7 +66,7 @@ exports.viewASpecificDoctor = (req, res, next) => {
     const area = req.body.area;
     const speciality = req.body.speciality;
     const fees = req.body.fees;
-    Doctors.findById(postId)
+    Doctors.findById(doctorId)
       .then(doctor => {
         if (!doctor) {
           const error = new Error('Could not find doctor.');
@@ -113,7 +113,7 @@ exports.viewASpecificDoctor = (req, res, next) => {
 
 
   exports.ViewMyPatients = (req,res,next) => {
-    const doctorId = req.params.doctorId;
+    const doctorId = req.userId;
     Doctors.findById(doctorId)
       .then(doctor => {
         if (!doctor) {
@@ -122,7 +122,7 @@ exports.viewASpecificDoctor = (req, res, next) => {
           throw error;
         }
         res.status(200).json({ message: 'doctor fetched.', 
-        doctor: doctor });
+        Patients: doctor.Patients });
       })
       .catch(err => {
         if (!err.statusCode) {
