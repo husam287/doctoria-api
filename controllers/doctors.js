@@ -41,7 +41,7 @@ exports.viewASpecificDoctor = (req, res, next) => {
   const doctorId = req.params.doctorId;
   Doctor.findOne({ basicInfo: doctorId })
     .select('-_id -appointments -patients')
-    .populate('basicInfo', '-email -password')
+    .populate('basicInfo timeslot', '-email -password')
     .then(doctor => {
       if (!doctor) {
         const error = new Error('Could not find doctor.');
