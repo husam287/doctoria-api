@@ -1,6 +1,8 @@
 const getDateFromDay = require("../utils/getDateFromDay");
 const Doctor = require('../models/doctors');
 const User = require('../models/users');
+const Appointment = require('../models/appointments');
+const Timeslot = require('../models/timeslots');
 const { validationResult } = require('express-validator');
 const uError = require("../utils/uError");
 
@@ -256,7 +258,7 @@ exports.editTimeSlot = async (req, res, next) => {
   const days = req.body.days;
   const slots = req.body.slots;
 
-  const doctor = await Doctor.findOne({ basicInfo: userId });
+  const doctor = await Doctor.findOne({ basicInfo: req.userId });
   if (doctor.timeslot) {
     Timeslot.findById(doctor.timeslot)
       .then(timeslot => {
