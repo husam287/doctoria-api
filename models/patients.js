@@ -19,7 +19,7 @@ const patientSchema = new Schema({
         doctor:{type:Schema.Types.ObjectId,ref:'Doctor',required:true},
         date:{type:Date,required:true}
     }]
-});
+},{versionKey:false});
 
 
 module.exports = mongoose.model("Patient", patientSchema);

@@ -46,7 +46,7 @@ const userSchema = new Schema({
         refPath:'userType',
     }
 
-});
+},{versionKey:false});
 
 
 module.exports = mongoose.model("User", userSchema);

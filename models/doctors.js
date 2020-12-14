@@ -38,7 +38,7 @@ const doctorSchema = new Schema({
         type:Schema.Types.ObjectId,
         ref:'Review',
     }]
-});
+},{versionKey:false});
 
 
 module.exports = mongoose.model("Doctor", doctorSchema);

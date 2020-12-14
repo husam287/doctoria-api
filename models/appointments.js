@@ -7,7 +7,7 @@ const appointmentsSchema = new Schema({
     date:{type:Date},
     completed:{type:Boolean,default:false},
     referred:{type:Boolean,default:false}
-});
+},{versionKey:false});
 
 module.exports = mongoose.model("Appointment",appointmentsSchema);
 

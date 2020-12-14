@@ -1,6 +1,8 @@
 const getDateFromDay = require("../utils/getDateFromDay");
-const Doctors = require('../models/doctors');
-const { validationResult } = require('express-validator/check');
+const Doctor = require('../models/doctors');
+const User = require('../models/users');
+const { validationResult } = require('express-validator');
+const uError = require("../utils/uError");
 
 
 exports.test = (req, res, next) => {
@@ -12,9 +14,11 @@ exports.test = (req, res, next) => {
 
 exports.viewAllDoctors = (req,res,next) => {
 //View all doctors in search.
-Doctors.find()
+Doctor.find()
+.select('-_id -appointments -patients')
+.populate('basicInfo','-email -password')
     .then(doctors => {
-        if (!doctors) {
+        if (doctors.length<=0) {
             const error = new Error('Could not find any doctors.');
             error.statusCode = 404;
             throw error;
@@ -22,12 +26,9 @@ Doctors.find()
         //if doctors are found ,render them to the page.
       res
         .status(200)
-        .json({ message: 'Fetched doctors successfully.', doctors: doctors });
+        .json(doctors);
     })
     .catch(err => {
-      if (!err.statusCode) {
-        err.statusCode = 500;
-      }
       next(err);
     });
 
@@ -36,43 +37,60 @@ Doctors.find()
 exports.viewASpecificDoctor = (req, res, next) => {
     //viewing a specific doctor's profile
     const doctorId = req.params.doctorId;
-    Doctors.findById(doctorId)
+    Doctor.findOne({basicInfo:doctorId})
+    .select('-_id -appointments -patients')
+    .populate('basicInfo','-email -password')
       .then(doctor => {
         if (!doctor) {
           const error = new Error('Could not find doctor.');
           error.statusCode = 404;
           throw error;
         }
-        res.status(200).json({ message: 'doctor fetched.', 
-        doctor:doctor });
+        res.status(200).json(doctor);
       })
       .catch(err => {
-        if (!err.statusCode) {
-          err.statusCode = 500;
-        }
         next(err);
       });
   };
 
-  exports.editSecondaryInfo = (req, res, next) => {
+  exports.editSecondaryInfo = async (req, res, next) => {
       //editing doctor's secondary information
-    const doctorId = req.params.doctorId;
+    const doctorId = req.userId;
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const error = new Error('Validation failed, entered data is incorrect.');
       error.statusCode = 422;
       throw error;
     }
+    
     const area = req.body.area;
     const speciality = req.body.speciality;
     const fees = req.body.fees;
-    Doctors.findById(doctorId)
+
+    //if first time for him 
+    try {
+      const user = await User.findById(doctorId);
+      console.log(doctorId);
+      if(!user) uError(404,'Could not find doctor');
+      if(!user.userDetail) {
+        const newDoctor = new Doctor({basicInfo:doctorId,fees:fees,area:area,speciality:speciality});
+        const docDoc = await newDoctor.save();
+        res.status(200).json({ message: 'doctor updated!', doctor: docDoc });
+      }
+    } catch (error) {
+      next(error);
+    }
+
+
+    Doctor.findOne({basicInfo:doctorId})
       .then(doctor => {
         if (!doctor) {
           const error = new Error('Could not find doctor.');
           error.statusCode = 404;
           throw error;
         }
+
         doctor.area = area;
         doctor.speciality = speciality;
         doctor.fees = fees;
@@ -82,9 +100,6 @@ exports.viewASpecificDoctor = (req, res, next) => {
         res.status(200).json({ message: 'doctor updated!', doctor: result });
       })
       .catch(err => {
-        if (!err.statusCode) {
-          err.statusCode = 500;
-        }
         next(err);
       });
   };
@@ -93,20 +108,18 @@ exports.viewASpecificDoctor = (req, res, next) => {
   exports.ViewProfile = (req, res, next) => {
     //Doctor can view his profile
     const userId = req.userId;
-    Doctors.findById(userId)
+    Doctor.findOne({basicInfo:userId})
+    .select('-_id -patients -appointments')
+    .populate('basicInfo timeslot reviews','-email -password')
       .then(doctor => {
         if (!doctor) {
           const error = new Error('Could not find doctor.');
           error.statusCode = 404;
           throw error;
         }
-        res.status(200).json({ message: 'doctor fetched.', 
-        doctor: doctor });
+        res.status(200).json(doctor);
       })
       .catch(err => {
-        if (!err.statusCode) {
-          err.statusCode = 500;
-        }
         next(err);
       });
   };
@@ -114,20 +127,25 @@ exports.viewASpecificDoctor = (req, res, next) => {
 
   exports.ViewMyPatients = (req,res,next) => {
     const doctorId = req.userId;
-    Doctors.findById(doctorId)
+    Doctor.findOne({basicInfo:doctorId})
+    .select('patients')
+    .populate({
+      path:'patients',
+      select:'-appointment -history',
+      populate:{
+        path:'basicInfo',
+        select:'-email -password'
+      }
+    })
       .then(doctor => {
         if (!doctor) {
           const error = new Error('Could not find doctor.');
           error.statusCode = 404;
           throw error;
         }
-        res.status(200).json({ message: 'doctor fetched.', 
-        Patients: doctor.Patients });
+        res.status(200).json(doctor.patients);
       })
       .catch(err => {
-        if (!err.statusCode) {
-          err.statusCode = 500;
-        }
         next(err);
       });
 

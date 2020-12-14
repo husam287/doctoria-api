@@ -21,7 +21,7 @@ router.post('/signup', [
 router.post('/login', authController.login)
 
 
-router.patch('/update-basic-info',[
+router.put('/update-basic-info',[
     isAuth,
     vText('name',{required:true,max:40}),
     body('phone').isMobilePhone('ar-EG'),

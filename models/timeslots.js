@@ -12,7 +12,7 @@ const timeslotSchema = new Schema({
         required: true
     }]
 
-});
+},{versionKey:false});
 
 
 
