@@ -33,7 +33,7 @@ router.patch('/appointments/:id/mark-as-completed', isAuth, doctorsController.ma
 
 router.post('/refer-patient', isAuth, doctorsController.referPatient);
 
-router.patch('/edit-timeslot', isAuth, doctorsController.editTimeSlot);
+router.put('/edit-timeslot', isAuth, doctorsController.editTimeSlot);
 
 router.get('/:doctorId', doctorsController.viewASpecificDoctor);
 
