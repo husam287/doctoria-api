@@ -16,18 +16,26 @@ router.put(
   '/my-profile/edit-secondary-info',
   [isAuth,
     body('area')
-    .trim(),
+      .trim(),
     body('fees')
-    .trim()
-    .isNumeric(),
+      .trim()
+      .isNumeric(),
     body('speciality').trim()
   ],
   doctorsController.editSecondaryInfo
-  );
-  
-  router.get('/my-profile/my-patients', [isAuth], doctorsController.ViewMyPatients);
-  
-  router.get('/:doctorId', doctorsController.viewASpecificDoctor);
+);
+
+router.get('/my-profile/my-patients', [isAuth], doctorsController.ViewMyPatients);
+
+router.get('/my-profile/my-appointments', isAuth, doctorsController.getAppointments);
+
+router.patch('/appointments/:id/mark-as-completed', isAuth, doctorsController.markCompleted);
+
+router.post('/refer-patient', isAuth, doctorsController.referPatient);
+
+router.patch('/edit-timeslot', isAuth, doctorsController.editTimeSlot);
+
+router.get('/:doctorId', doctorsController.viewASpecificDoctor);
 
 
 
