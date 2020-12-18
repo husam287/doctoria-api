@@ -6,20 +6,16 @@ const { body } = require('express-validator');
 
 
 
-router.get('/my-profile', [isAuth], patientsController.ViewProfile);
-router.get('/my-profile/my-history', [isAuth], patientsController.ViewProfile);
-router.get('/my-profile/my-appointments', [isAuth], patientsController.ViewProfile);
+router.get('/my-profile', [isAuth], patientsController.ViewMyProfile);
+router.get('/my-profile/my-history', [isAuth], patientsController.ViewMyhistory);
+router.get('/my-profile/my-appointments', [isAuth], patientsController.ViewMyAppointments);
 router.get('/:patientId', patientsController.viewASpecificPatient);
 
 
 
 router.put(
  '/my-profile/edit-secondary-info',
-  [isAuth,
-    body('chronicDiseases')
-    .trim(),
-  ],
-  patientsController.editSecondaryInfo
-  );
+  [isAuth],
+  patientsController.editSecondryInfo);
 
 module.exports = router;
