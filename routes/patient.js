@@ -14,19 +14,28 @@ router.get('/:patientId', patientsController.viewASpecificPatient);
 
 
 router.put(
- '/my-profile/edit-secondary-info',
-  [isAuth],
-  patientsController.editSecondryInfo);
+ '/my-profile/edit-secondary-info',[isAuth],patientsController.editSecondryInfo);
 
 
-router.post('/make-appointment/:doctorId',[isAuth,vText('day',{required:true})], patientsController.postMakeAppointment);
+router.post('/make-appointment/:doctorId',[
+  isAuth,
+  vText('day',{required:true}),
+  validationResult
+], 
+patientsController.postMakeAppointment);
 
 
 
 router.delete('/cancel-appointment/:appointmentId',[isAuth], patientsController.postCancelAppointment);
 
 
-router.post('/make-review',[isAuth], patientsController.postReview);
+router.post('/make-review/:doctorId',[
+  isAuth,
+  vText('comment',{required:true,specialChars:true}),
+  body('rate').isNumeric(),
+  validationResult
+], 
+patientsController.postReview);
 
 
 module.exports = router;

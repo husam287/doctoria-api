@@ -19,6 +19,7 @@ exports.viewAllDoctors = (req, res, next) => {
   //View all doctors in search.
   Doctor.find()
     .select('-_id -appointments -patients')
+    .populate('reviews','-_id -updatedAt')
     .populate('basicInfo', '-email -password -userDetails')
     .then(doctors => {
       if (doctors.length <= 0) {

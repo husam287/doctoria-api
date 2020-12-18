@@ -191,41 +191,41 @@ exports.postCancelAppointment = (req, res, next) => {
   Patient.findOne({ basicInfo: req.userId })
     .then(patient => {
       if (!patient) uError(404, "patient not found");
-      let flag=true;
+      let flag = true;
       patient.appointments.every((element, i) => {
         if (element.details.toString() === appointmentId.toString()) {
           targetDoctorId = element.doctor;
           patient.appointments.splice(i, 1);
-          flag=false;
+          flag = false;
           return false;
         }
         return true;
       });
 
-      if(flag) uError(404, "appointment doesn't exist");
+      if (flag) uError(404, "appointment doesn't exist");
       return patient.save();
     })
     .then(() => {
       return Doctor.findById(targetDoctorId)
     })
     .then(doctor => {
-      let flag=true;
+      let flag = true;
       doctor.appointments.every((element, i) => {
         if (element.toString() === appointmentId.toString()) {
           doctor.appointments.splice(i, 1);
-          flag=false;
+          flag = false;
           return false;
         }
         return true;
       });
-      if(flag) uError(404, "appointment doesn't exist");
+      if (flag) uError(404, "appointment doesn't exist");
       return doctor.save()
     })
-    .then(()=>{
+    .then(() => {
       return Appointment.findByIdAndRemove(appointmentId);
     })
-    .then(()=>{
-      res.status(200).json({message:"Appointment is been cancelled!!"});
+    .then(() => {
+      res.status(200).json({ message: "Appointment is been cancelled!!" });
     })
     .catch(err => {
       next(err);
@@ -236,19 +236,18 @@ exports.postCancelAppointment = (req, res, next) => {
 
 
 exports.postReview = (req, res, next) => {
-  const doctorId = req.params.userId;
-  //
-  const Stars = req.body.star;////////////////////////
-  Doctor.findOne(doctorId)
-    .then(doctor => {
-      if (!doctor) {
-        const error = new Error('The doctor cannot be found');
-        error.statusCode = 404;
-        throw error;
-      }
-      doctor.review = Stars;
-      res.statusCode(200).json({ message: 'hehe' });
+  const doctorId = req.params.doctorId;
+  const review = new Review(req.body);
+
+  Doctor.findOne({ basicInfo: doctorId })
+    .then((doctor) => {
+      if (!doctor) uError(404, "doctor not found")
+      doctor.reviews.push(review._id);
       return doctor.save();
+    })
+    .then(() => {
+      review.save();
+      res.status(200).json(review);
     })
     .catch(err => {
       next(err);
