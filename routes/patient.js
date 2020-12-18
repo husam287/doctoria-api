@@ -18,4 +18,16 @@ router.put(
   [isAuth],
   patientsController.editSecondryInfo);
 
+
+router.post('/make-appointment', patientController.postMakeAppointment);
+
+
+
+router.delete('/cancel-appointment', patientController.postCancelAppointment);
+
+
+router.post('/make-review', patientController.postReview);
+
+
 module.exports = router;
+
