@@ -19,14 +19,14 @@ router.put(
   patientsController.editSecondryInfo);
 
 
-router.post('/make-appointment', patientController.postMakeAppointment);
+router.post('/make-appointment/:doctorId',[isAuth,vText('day',{required:true})], patientsController.postMakeAppointment);
 
 
 
-router.delete('/cancel-appointment', patientController.postCancelAppointment);
+router.delete('/cancel-appointment/:appointmentId',[isAuth], patientsController.postCancelAppointment);
 
 
-router.post('/make-review', patientController.postReview);
+router.post('/make-review',[isAuth], patientsController.postReview);
 
 
 module.exports = router;

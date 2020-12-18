@@ -5,6 +5,7 @@ const Appointment = require('../models/appointments');
 const Timeslot = require('../models/timeslots');
 const { validationResult } = require('express-validator');
 const uError = require("../utils/uError");
+const { populate } = require("../models/appointments");
 
 
 exports.test = (req, res, next) => {
@@ -18,7 +19,7 @@ exports.viewAllDoctors = (req, res, next) => {
   //View all doctors in search.
   Doctor.find()
     .select('-_id -appointments -patients')
-    .populate('basicInfo', '-email -password')
+    .populate('basicInfo', '-email -password -userDetails')
     .then(doctors => {
       if (doctors.length <= 0) {
         const error = new Error('Could not find any doctors.');
@@ -75,9 +76,11 @@ exports.editSecondaryInfo = async (req, res, next) => {
     const user = await User.findById(doctorId);
     console.log(doctorId);
     if (!user) uError(404, 'Could not find doctor');
-    if (!user.userDetail) {
+    if (!user.userDetails) {
       const newDoctor = new Doctor({ basicInfo: doctorId, fees: fees, area: area, speciality: speciality });
       const docDoc = await newDoctor.save();
+      user.userDetails = newDoctor._id;
+      user.save()
       res.status(200).json({ message: 'doctor updated!', doctor: docDoc });
     }
   } catch (error) {
@@ -111,8 +114,19 @@ exports.ViewProfile = (req, res, next) => {
   //Doctor can view his profile
   const userId = req.userId;
   Doctor.findOne({ basicInfo: userId })
-    .select('-_id -patients -appointments')
-    .populate('basicInfo timeslot reviews', '-email -password')
+    .select('-_id')
+    .populate('basicInfo timeslot reviews', '-email -password -userDetails')
+    .populate({
+      path:'appointments',
+      populate:{
+        path:'patient',
+        select:'-_id -appointments -history',
+        populate:{
+          path:'basicInfo',
+          select:'name _id photo'
+        }
+      }
+    })
     .then(doctor => {
       if (!doctor) {
         const error = new Error('Could not find doctor.');

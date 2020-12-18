@@ -13,5 +13,5 @@ module.exports = (day)=>{
         todayDay=today.toLocaleString('en-us', {  weekday: 'long' });
     }
 
-    return today.toDateString();
+    return today;
 }

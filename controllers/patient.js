@@ -1,6 +1,10 @@
 const Patient = require('../models/patients');
 const User = require('../models/users');
+const Doctor = require('../models/doctors');
+const Appointment = require('../models/appointments');
+const Review = require('../models/reviews');
 const uError = require("../utils/uError");
+const getDateFromDay = require('../utils/getDateFromDay');
 
 //edit basic information
 exports.editSecondryInfo = async (req, res, next) => {
@@ -10,11 +14,11 @@ exports.editSecondryInfo = async (req, res, next) => {
   // for first time
   try {
     const user = await User.findById(patientId);
-    if (!user) uError(404, 'Could not find patient');
-    if (!user.userDetail) {
+    if (!user) uError(404, 'Could not find User');
+    if (!user.userDetails) {
       const newpatient = new Patient({ basicInfo: patientId, chronicDiseases: chronicDiseases });
       const pat = await newpatient.save();
-      res.status(200).json({ message: 'Patient updated!', patient: pat });
+      res.status(200).json({ message: 'Patient updated!', chronicDiseases: pat.chronicDiseases });
     }
   } catch (error) {
     next(error);
@@ -33,7 +37,7 @@ exports.editSecondryInfo = async (req, res, next) => {
       return patient.save();
     })
     .then(result => {
-      res.status(200).json({ message: 'patient updated!', patient: result });
+      res.status(200).json({ message: 'patient updated!', chronicDiseases: result.chronicDiseases });
     })
     .catch(err => {
       next(err);
@@ -50,7 +54,7 @@ exports.viewASpecificPatient = (req, res, next) => {
         path: 'history.doctor',
         select: 'fees area speciality basicInfo',
         populate: {
-          path: 'history.doctor.basicInfo',
+          path: 'basicInfo',
           select: 'name _id photo'
         }
       }
@@ -66,13 +70,15 @@ exports.viewASpecificPatient = (req, res, next) => {
 exports.ViewMyProfile = (req, res, next) => {
   const userId = req.userId;
   Patient.findOne({ basicInfo: userId })
-    .select('-_id')
+    .select('-_id -appointments._id')
+    .populate('basicInfo', '-email -password -userDetails')
+    .populate('appointments.details', '-patient')
     .populate({
-      path: 'basicInfo appointments.doctor appointments.details history.doctor',
-      select: '-email -password -userDetails',
+      path: 'appointments.doctor history.doctor',
+      select: '-_id -patients -appointments -reviews -timeslot',
       populate: {
-        path: 'history.doctor.basicInfo appointments.doctor.basicInfo appointments.details',
-        select: '-email -password -patient'
+        path: 'basicInfo',
+        select: 'name _id photo'
       }
     })
     .then(patient => {
@@ -95,11 +101,11 @@ exports.ViewMyhistory = (req, res, next) => {
   Patient.findOne({ basicInfo: patientId })
     .select('history')
     .populate({
-      path: 'doctors',
-      select: 'speciality fees area',
+      path: 'history.doctor',
+      select: '-_id -patients -appointments -reviews -timeslot',
       populate: {
         path: 'basicInfo',
-        select: 'name photo _id'
+        select: 'name _id photo'
       }
     })
     .then(patient => {
@@ -114,17 +120,20 @@ exports.ViewMyhistory = (req, res, next) => {
       next(err);
     });
 }
+
+
 //patient can view Appointments
 exports.ViewMyAppointments = (req, res, next) => {
   const patientId = req.userId;
   Patient.findOne({ basicInfo: patientId })
     .select('appointments')
+    .populate('appointments.details', '-patient')
     .populate({
-      path: 'doctors',
-      select: 'speciality fees area',
+      path: 'appointments.doctor',
+      select: '-_id -patients -appointments -reviews -timeslot',
       populate: {
         path: 'basicInfo',
-        select: 'name photo _id'
+        select: '-userDetails -email -password'
       }
     })
     .then(patient => {
@@ -144,41 +153,31 @@ exports.ViewMyAppointments = (req, res, next) => {
 
 
 
-exports.postMakeAppointment = (req, res, next) => {
-  // info from server date ,patientId
-  // get doc id
-  // add patent to app array in doctor
-  const doctorId = req.params.userId;
-  const errors = validationResult(req);
-  Doctor.findOne(doctorId)
-    .then(doctor => {
-      if (!doctor) {
-        const error = new Error('The doctor cannot be found');
-        error.statusCode = 404;
-        throw error;
-      }
-      // patient auth
-      const appointment = new appointment({////
-        // men body?////
-        patient: req.body.patient,////
-        doctor: doctorId,///
-        // date: req.date,
-        date: req.body.date,////
-        timeslot: req.body.timeslot//// name from database
-      })
-      doctor.appointment.push(appointment);
-      res.statusCode(200).json({ message: 'hehe' });
-      return doctor.save;
+exports.postMakeAppointment = async (req, res, next) => {
+
+  const doctorId = req.params.doctorId;
+  let patient;
+  let appointment;
+
+  Doctor.findOne({ basicInfo: doctorId })
+    .then(async (doctor) => {
+      if (!doctor) uError(404, 'doctor not found');
+      const dayDate = getDateFromDay(req.body.day);
+      patient = await Patient.findOne({ basicInfo: req.userId });
+      appointment = new Appointment({ patient: patient._id, date: dayDate });
+      appointment.save();
+      doctor.appointments.push(appointment._id);
+      return doctor.save();
     })
-    .then(() => {//////// name app men patient database
-      patient.appointment.push(appointment);
-      res.statusCode(200).json({ message: 'hehe' });
+    .then((doctor) => {
+      const patientAppointment = { details: appointment._id, doctor: doctor._id }
+      patient.appointments.push(patientAppointment);
       return patient.save();
     })
+    .then(() => {
+      res.status(200).json({ message: 'Made an appointment!', appointment: appointment });
+    })
     .catch(err => {
-      if (!err.statusCode) {
-        err.statusCode = 500;
-      }
       next(err);
     });
 }
@@ -186,63 +185,52 @@ exports.postMakeAppointment = (req, res, next) => {
 
 
 exports.postCancelAppointment = (req, res, next) => {
-  // patient auth
-  // or from params
   const appointmentId = req.params.appointmentId;
-  // da men user wla body
-  const doctorId = req.body.userId;
-  const patientId = req.userId;
-  const errors = validationResult(req);
-  Doctor.findOne(doctorId)
-    .then(appointmentId => {
-      if (!appointmentId) {
-        const error = new Error('The appointment cannot be found');
-        error.statusCode = 404;
-        throw error;
-      }
-      // appointments shema standalone
-      appointment.findByIdAndRemove(appointmentId);
-      res.statusCode(200);
-      return appointment.save();
-    })
-    .then(doctor => {
-      if (!doctor) {
-        const error = new Error('The doctor cannot be found');
-        error.statusCode = 404;
-        throw error;
-      }
-      // remove from doc array of patients
-      // remove app from doctor database
 
-      for (var i = 0; i <= appointments.count + 1; i++) {
-        if (doctor.appointments[i] == appointmentId) {
-          // de btegb index we tsheel wahd
-          appointments.splice(i, 1);
+  let targetDoctorId;
+  Patient.findOne({ basicInfo: req.userId })
+    .then(patient => {
+      if (!patient) uError(404, "patient not found");
+      let flag=true;
+      patient.appointments.every((element, i) => {
+        if (element.details.toString() === appointmentId.toString()) {
+          targetDoctorId = element.doctor;
+          patient.appointments.splice(i, 1);
+          flag=false;
+          return false;
         }
-      }
-      res.statusCode(200);
-      return doctor.save();
+        return true;
+      });
 
-      // Doctor.appointments.findByIdAndRemove(appointmentId);
-      //  Doctor.patients.findByIdAndRemove(patientId);
-    })
-    .then(() => {
-      // patient
-      for (var i = 0; i <= appointments.count + 1; i++) {
-        if (patient.appointments[i] == appointmentId) {
-          // de btegb index we tsheel wahd
-          appointments.splice(i, 1);
-        }
-      }
-      res.statusCode(200);
+      if(flag) uError(404, "appointment doesn't exist");
       return patient.save();
     })
+    .then(() => {
+      return Doctor.findById(targetDoctorId)
+    })
+    .then(doctor => {
+      let flag=true;
+      doctor.appointments.every((element, i) => {
+        if (element.toString() === appointmentId.toString()) {
+          doctor.appointments.splice(i, 1);
+          flag=false;
+          return false;
+        }
+        return true;
+      });
+      if(flag) uError(404, "appointment doesn't exist");
+      return doctor.save()
+    })
+    .then(()=>{
+      return Appointment.findByIdAndRemove(appointmentId);
+    })
+    .then(()=>{
+      res.status(200).json({message:"Appointment is been cancelled!!"});
+    })
     .catch(err => {
-      if (!err.statusCode) {
-        err.statusCode = 500;
-      }
       next(err);
-    });
+    })
+
 };
 
 
