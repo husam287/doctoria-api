@@ -1,5 +1,6 @@
 const getDateFromDay = require("../utils/getDateFromDay");
 const Doctor = require('../models/doctors');
+const Patient = require('../models/patients');
 const User = require('../models/users');
 const Appointment = require('../models/appointments');
 const Timeslot = require('../models/timeslots');
@@ -43,7 +44,8 @@ exports.viewASpecificDoctor = (req, res, next) => {
   const doctorId = req.params.doctorId;
   Doctor.findOne({ basicInfo: doctorId })
     .select('-_id -appointments -patients')
-    .populate('basicInfo timeslot', '-email -password')
+    .populate('timeslot reviews','-_id -updatedAt')
+    .populate('basicInfo', '-email -password -userDetails')
     .then(doctor => {
       if (!doctor) {
         const error = new Error('Could not find doctor.');
@@ -116,7 +118,8 @@ exports.ViewProfile = (req, res, next) => {
   const userId = req.userId;
   Doctor.findOne({ basicInfo: userId })
     .select('-_id')
-    .populate('basicInfo timeslot reviews', '-email -password -userDetails')
+    .populate('timeslot reviews','-_id -updatedAt')
+    .populate('basicInfo', '-email -password -userDetails')
     .populate({
       path:'appointments',
       populate:{
@@ -148,10 +151,10 @@ exports.ViewMyPatients = (req, res, next) => {
     .select('patients')
     .populate({
       path: 'patients',
-      select: '-appointment -history',
+      select: '-_id -appointments -history',
       populate: {
         path: 'basicInfo',
-        select: '-email -password'
+        select: 'name _id photo'
       }
     })
     .then(doctor => {
@@ -173,7 +176,14 @@ exports.ViewMyPatients = (req, res, next) => {
 exports.getAppointments = (req, res, next) => {
 
   Doctor.findOne({ basicInfo: req.userId })
-    .populate('appointments')
+    .populate({
+      path:'appointments',
+      populate:{
+        path:'patient',
+        select:'-_id basicInfo',
+        populate:{path:'basicInfo',select:'name _id photo'}
+      }
+    })
     .then(doctor => {
       res.status(202).json(doctor.appointments);
     })
@@ -190,13 +200,15 @@ exports.markCompleted = (req, res, next) => {
   Doctor.findOne({ basicInfo: req.userId })
     .then(doctor => {
       thisDoctor = doctor;
-      let flag = 0;
-      doctor.appointments.forEach(element => {
+      let flag = 1;
+      doctor.appointments.every(element => {
         if (element.toString() === req.params.id.toString()) {
-          flag = 1;
+          flag = 0;
+          return false;
         }
+        return true;
       });
-      if (!flag) uError(400, 'not in my appointments');
+      if (flag) uError(400, 'not in my appointments');
 
       return Appointment.findById(req.params.id);
     })
@@ -206,18 +218,24 @@ exports.markCompleted = (req, res, next) => {
       return appointment.save()
     })
     .then(() => {
-      let flag = 0;
-      thisDoctor.patients.forEach(i => {
+      let flag = 1;
+      thisDoctor.patients.every(i => {
         if (i.toString() === appointmentPatientId.toString()) {
-          flag = 1;
+          flag = 0;
+          return false;
         }
+        return true;
       });
 
-      if (!flag) { thisDoctor.patients.push(appointmentPatientId); }
+      if (flag) { thisDoctor.patients.push(appointmentPatientId); }
 
-      return thisDoctor.save();
+      thisDoctor.save();
+      return Patient.findById(appointmentPatientId);
     })
-    .then(() => {
+    .then((patient) => {
+      const history = {doctor:thisDoctor._id,date:Date.now()}
+      patient.history.push(history);
+      patient.save();
       res.status(202).json({ message: "Marked As Completed Sucessfully!!" });
     })
     .catch(err => {
@@ -232,22 +250,38 @@ exports.referPatient = async (req, res, next) => {
   const doctor = req.query.doctor;
   const appointment = req.query.appointment;
 
-  const name = await User.findById().name;
+  let name = await User.findById(doctor);
+  name=name.name;
+
+  let specialIdOfDoctor;
+  try {
+    const appointmentCompletion = await Appointment.findById(appointment);
+    if(!appointmentCompletion) uError(404,"no appointment");
+    if(appointmentCompletion.completed) uError(400,"Completed Appointment");
+    
+  } catch (error) {
+    next(error);
+  }
 
   Doctor.findOne({ basicInfo: req.userId })
     .then(doctor => {
-      let flag = 0;
-      doctor.appointments.forEach((element, i) => {
-        if (element.toString() === req.params.id.toString()) {
-          flag = 1;
+      
+      let flag = 1;
+      doctor.appointments.every((element, i) => {
+        if (element.toString() === appointment.toString()) {
+          flag = 0;
           doctor.appointments.splice(i, 1);
+          return false;
         }
+        return true;
       });
-      if (!flag) uError(400, 'not in my appointments');
+      if (flag) uError(400, 'not in my appointments');
 
+      doctor.save();
       return Appointment.findById(appointment);
     })
     .then(appointment => {
+
       appointment.referred = true;
       appointment.date = null;
       return appointment.save()
@@ -255,11 +289,21 @@ exports.referPatient = async (req, res, next) => {
     .then(() => {
       return Doctor.findOne({ basicInfo: doctor })
     })
-    .then((refDoc) => {
+    .then(async(refDoc) => {
       refDoc.appointments.push(appointment)
-      return refDoc.save()
-    })
-    .then(() => {
+      refDoc.save()
+
+      appDoc = await Appointment.findById(appointment);
+      patient = await Patient.findById(appDoc.patient);
+      patient.appointments.every((element)=>{
+        if(element.details.toString()===appointment.toString()){
+          element.doctor=refDoc._id;
+          return false
+        }
+        return true;
+      });
+
+      patient.save();
       res.status(202).json({ message: `Referred To ${name}` })
     })
     .catch(err => {
@@ -272,8 +316,14 @@ exports.editTimeSlot = async (req, res, next) => {
 
   const days = req.body.days;
   const slots = req.body.slots;
-
-  const doctor = await Doctor.findOne({ basicInfo: req.userId });
+  let doctor;
+  
+  try{
+    doctor = await Doctor.findOne({ basicInfo: req.userId });
+    if(!doctor) uError(404,"Doctor Not found");
+  }catch(error){
+    next(error)
+  }
   if (doctor.timeslot) {
     Timeslot.findById(doctor.timeslot)
       .then(timeslot => {

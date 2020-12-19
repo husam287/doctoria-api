@@ -46,17 +46,17 @@ exports.editSecondryInfo = async (req, res, next) => {
 exports.viewASpecificPatient = (req, res, next) => {
 
   Patient.findOne({ basicInfo: req.params.patientId })
-    .select('-_id -appointments')
+    .select('-_id -appointments -history._id')
     .populate({
       path: 'basicInfo',
-      select: '-email -password -userDetails',
+      select: '-email -password -userDetails'
+    })
+    .populate({
+      path: 'history.doctor',
+      select: '-_id fees area speciality basicInfo',
       populate: {
-        path: 'history.doctor',
-        select: 'fees area speciality basicInfo',
-        populate: {
-          path: 'basicInfo',
-          select: 'name _id photo'
-        }
+        path: 'basicInfo',
+        select: 'name _id photo'
       }
     })
     .then(patient => {
