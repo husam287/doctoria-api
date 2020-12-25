@@ -19,7 +19,7 @@ module.exports = (day,hour='15:00')=>{
         today.setDate(today.getDate()+1);
         todayDay=today.toLocaleString('en-us', {  weekday: 'long' });
     }
-
-
+    today.setHours(hours,mins,0,0);
+    today.setTime(today.getTime()-new Date().getTimezoneOffset()*60*1000);
     return today;
 }

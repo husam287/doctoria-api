@@ -6,7 +6,6 @@ const Appointment = require('../models/appointments');
 const Timeslot = require('../models/timeslots');
 const { validationResult } = require('express-validator');
 const uError = require("../utils/uError");
-const { populate } = require("../models/appointments");
 
 
 exports.test = (req, res, next) => {
