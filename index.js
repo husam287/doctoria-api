@@ -5,12 +5,10 @@ const _DB_URL = process.env.MONGO_URL;
 
 
 if(process.env.NODE_ENV != "production") require("dotenv").config();
+
+
 //##### main express function #####
 const app = express();
-
-//##### body parser #####
-app.use(bodyParser.json());
-
 //##### allowing required header #####
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,6 +17,9 @@ app.use((req, res, next) => {
     next();
   
   })
+//##### body parser #####
+app.use(bodyParser.json());
+
   
 
   
