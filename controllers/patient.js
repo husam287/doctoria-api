@@ -162,7 +162,7 @@ exports.postMakeAppointment = async (req, res, next) => {
   Doctor.findOne({ basicInfo: doctorId })
     .then(async (doctor) => {
       if (!doctor) uError(404, 'doctor not found');
-      const dayDate = getDateFromDay(req.body.day);
+      const dayDate = getDateFromDay(req.body.day, req.body.time);
       patient = await Patient.findOne({ basicInfo: req.userId });
       appointment = new Appointment({ patient: patient._id, date: dayDate });
       appointment.save();
