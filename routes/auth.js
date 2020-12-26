@@ -20,6 +20,9 @@ router.post('/signup', [
 
 router.post('/login', authController.login)
 
+router.get('/:id/get', authController.getUserInfo);
+
+
 
 router.put('/update-basic-info',[
     isAuth,

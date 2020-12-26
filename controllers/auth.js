@@ -102,6 +102,22 @@ exports.updateBasicInfo = (req,res,next)=>{
 }
 
 
+exports.getUserInfo = (req,res,next)=>{
+    const userId = req.params.id;
+
+    User.findById(userId)
+    .select('-email -passoword')
+    .populate('userDetails')
+    .then(user=>{
+        res.status(200).json(user);
+    })
+    .catch(err=>{
+        next(err);
+    })
+}
+
+
+
 
 
 
