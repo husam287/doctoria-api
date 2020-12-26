@@ -62,11 +62,14 @@ exports.login = (req, res, next) => {
                 uError(401,'Wrong password');
             }
             //##### Create the token #####
-            const token = jwt.sign({ userId: fetchedUser._id }, process.env.TOKEN_KEY);
+            const tokenTimeInHours = 3;
+            const token = jwt.sign({ userId: fetchedUser._id }, process.env.TOKEN_KEY,{ expiresIn: tokenTimeInHours.toString() + 'h' });
+            const expireDate = new Date().getTime() + tokenTimeInHours * 1000 * 60 * 60;
             res.status(202).json(
                 {
                     token: token,
                     userId: fetchedUser._id,
+                    expireDate: expireDate
                 })
         })
         .catch(err => {
