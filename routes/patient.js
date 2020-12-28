@@ -20,7 +20,7 @@ router.put(
 router.post('/make-appointment/:doctorId',[
   isAuth,
   vText('day',{required:true}),
-  vText('time',{required:true}),
+  vText('time',{required:true,specialChars:true}),
   validationResult
 ], 
 patientsController.postMakeAppointment);
