@@ -107,7 +107,12 @@ exports.getUserInfo = (req,res,next)=>{
 
     User.findById(userId)
     .select('-email -passoword')
-    .populate('userDetails')
+    .populate({
+        path:'userDetails',
+        populate:{
+            path:'timeslot'
+        }
+    })
     .then(user=>{
         res.status(200).json(user);
     })
