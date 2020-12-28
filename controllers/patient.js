@@ -185,10 +185,20 @@ exports.postMakeAppointment = async (req, res, next) => {
 
 
 
-exports.postCancelAppointment = (req, res, next) => {
+exports.postCancelAppointment =async (req, res, next) => {
   const appointmentId = req.params.appointmentId;
 
   let targetDoctorId;
+
+  try {
+    const appointmentDoc = await Appointment.findById(appointmentId);
+    if(appointmentDoc.completed) uError(400,'Appointment Already finished')
+  } catch (error) {
+    next(error)
+    return
+  }
+
+
   Patient.findOne({ basicInfo: req.userId })
     .then(patient => {
       if (!patient) uError(404, "patient not found");
