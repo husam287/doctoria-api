@@ -260,6 +260,7 @@ exports.referPatient = async (req, res, next) => {
     
   } catch (error) {
     next(error);
+    return;
   }
 
   Doctor.findOne({ basicInfo: req.userId })
