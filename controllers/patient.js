@@ -22,6 +22,7 @@ exports.editSecondryInfo = async (req, res, next) => {
     }
   } catch (error) {
     next(error);
+    return;
   }
 
   Patient.findOne({ basicInfo: patientId })
