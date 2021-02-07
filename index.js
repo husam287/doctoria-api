@@ -9,6 +9,12 @@ if(process.env.NODE_ENV != "production") require("dotenv").config();
 
 //##### main express function #####
 const app = express();
+
+//##### For Deployment #####
+const helmet = require('helmet');
+app.use(helmet());
+
+
 //##### allowing required header #####
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
